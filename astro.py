@@ -16,6 +16,13 @@ import sys
 import re
 from datetime import datetime
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 import click
 from rich.console import Console
 from rich.prompt import Prompt
@@ -28,24 +35,7 @@ import display
 console = Console()
 
 
-def parse_date(s: str) -> tuple[int, int, int]:
-    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d/%m/%y"):
-        try:
-            d = datetime.strptime(s.strip(), fmt)
-            return d.year, d.month, d.day
-        except ValueError:
-            pass
-    raise ValueError(f"Data inválida: '{s}'. Use DD/MM/AAAA.")
-
-
-def parse_time(s: str) -> tuple[int, int]:
-    m = re.match(r"^(\d{1,2})[:\.](\d{2})$", s.strip())
-    if not m:
-        raise ValueError(f"Horário inválido: '{s}'. Use HH:MM.")
-    h, mi = int(m.group(1)), int(m.group(2))
-    if not (0 <= h <= 23 and 0 <= mi <= 59):
-        raise ValueError("Horário fora do intervalo.")
-    return h, mi
+from prompts import parse_date, parse_time
 
 
 @click.command()
