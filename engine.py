@@ -3,7 +3,12 @@ Astrological engine: wraps kerykeion for natal chart calculations.
 Returns a clean dict used by wheel and display modules.
 """
 
-from kerykeion import AstrologicalSubject
+try:
+    from kerykeion import AstrologicalSubject
+    HAS_SUBJECT_CLASS = True
+except (ImportError, AttributeError):
+    from kerykeion import AstrologicalSubjectFactory
+    HAS_SUBJECT_CLASS = False
 
 
 PLANET_KEYS = [
@@ -84,20 +89,36 @@ def calculate(name: str, year: int, month: int, day: int,
               hour: int, minute: int,
               lat: float, lon: float, tz_str: str) -> dict:
 
-    subject = AstrologicalSubject(
-        name=name,
-        year=year,
-        month=month,
-        day=day,
-        hour=hour,
-        minute=minute,
-        city="",
-        nation="",
-        lat=lat,
-        lng=lon,
-        tz_str=tz_str,
-        online=False,
-    )
+    if HAS_SUBJECT_CLASS:
+        subject = AstrologicalSubject(
+            name=name,
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            city="",
+            nation="",
+            lat=lat,
+            lng=lon,
+            tz_str=tz_str,
+            online=False,
+        )
+    else:
+        subject = AstrologicalSubjectFactory.from_birth_data(
+            name=name,
+            year=year,
+            month=month,
+            day=day,
+            hour=hour,
+            minute=minute,
+            lat=lat,
+            lng=lon,
+            tz_str=tz_str,
+            city="",
+            nation="",
+            online=False,
+        )
 
     planets = {}
     for attr, name_pt, name_en, symbol in PLANET_KEYS:
