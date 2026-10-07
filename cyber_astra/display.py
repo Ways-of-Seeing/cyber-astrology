@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from . import synthesis
+from . import synastry as syn
 from .data import ASPECTS, ELEMENTS, MODALITIES, get_house, get_planet_sign
 from .engine import Chart
 
@@ -61,6 +62,14 @@ LABELS = {
         "challenging": "Desafiador",
         "fusing": "Fusão",
         "no_aspects": "Nenhum aspecto maior encontrado dentro das orbes.",
+        "synastry_title": "💞 SINASTRIA — MAPAS CRUZADOS",
+        "common_traits": "O que vocês têm em comum",
+        "chemistry": "Química dos pares-chave",
+        "cross_aspects": "Aspectos entre os dois mapas",
+        "soft_count": "aspectos fluidos",
+        "hard_count": "aspectos desafiadores",
+        "fusion_count": "fusões",
+        "no_common": "Os mapas de vocês são bem diferentes — e é justamente aí que mora a descoberta.",
     },
     "en": {
         "chart_title": "NATAL CHART",
@@ -93,6 +102,14 @@ LABELS = {
         "challenging": "Challenging",
         "fusing": "Fusion",
         "no_aspects": "No major aspects found within orb.",
+        "synastry_title": "💞 SYNASTRY — CROSSED CHARTS",
+        "common_traits": "What you have in common",
+        "chemistry": "Key-pair chemistry",
+        "cross_aspects": "Aspects between the two charts",
+        "soft_count": "flowing aspects",
+        "hard_count": "challenging aspects",
+        "fusion_count": "fusions",
+        "no_common": "Your charts are quite different — and that's exactly where discovery lives.",
     },
 }
 
@@ -385,3 +402,96 @@ def show_house_meanings(chart: Chart, lang: str = "pt"):
                 expand=True,
             )
         )
+
+
+def show_synastry(chart_a: Chart, chart_b: Chart, lang: str = "pt"):
+    """Full synastry report: verdict, shared traits, chemistry, cross aspects."""
+    L = LABELS[lang]
+    console.print()
+    console.rule(f"[bold magenta]{L['synastry_title']}[/]")
+
+    # ── Header with both names ──────────────────────────────────────────────
+    console.print(
+        Panel(
+            f"[bold yellow]{chart_a.name}[/]  [bright_magenta]×[/]  "
+            f"[bold cyan]{chart_b.name}[/]",
+            title=f"[bold bright_magenta]{L['synastry_title']}[/]",
+            border_style="bright_magenta",
+            expand=True,
+        )
+    )
+
+    aspects = syn.cross_aspects(chart_a, chart_b)
+    verdict = syn.couple_verdict(aspects, lang)
+
+    # ── Verdict panel ───────────────────────────────────────────────────────
+    counts = (f"[green]{verdict['soft']} {L['soft_count']}[/]  ·  "
+              f"[red]{verdict['hard']} {L['hard_count']}[/]  ·  "
+              f"[yellow]{verdict['fusion']} {L['fusion_count']}[/]")
+    console.print(
+        Panel(
+            f"{counts}\n\n[white]{verdict['texto']}[/]",
+            title=f"[bold bright_magenta]⚖️ {verdict['titulo']}[/]",
+            border_style="bright_magenta",
+            expand=True,
+        )
+    )
+
+    # ── Shared traits ───────────────────────────────────────────────────────
+    traits = syn.shared_traits(chart_a, chart_b, lang)
+    body = ("\n".join(f"  [dim]▸[/] {t}" for t in traits)
+            if traits else f"[dim]{L['no_common']}[/]")
+    console.print(
+        Panel(
+            body,
+            title=f"[bold cyan]🤝 {L['common_traits']}[/]",
+            border_style="cyan",
+            expand=True,
+        )
+    )
+
+    # ── Key-pair chemistry ──────────────────────────────────────────────────
+    for panel in syn.key_pair_chemistry(chart_a, chart_b, lang):
+        console.print(
+            Panel(
+                f"[white]{panel['body']}[/]",
+                title=f"[bold yellow]{panel['title']}[/]",
+                border_style="yellow",
+                expand=True,
+            )
+        )
+
+    # ── Cross aspects table ─────────────────────────────────────────────────
+    if aspects:
+        console.print()
+        table = Table(title=L["cross_aspects"], box=box.SIMPLE_HEAD,
+                      header_style="bold magenta")
+        table.add_column(L["aspect"], min_width=38)
+        table.add_column(L["nature"], min_width=12)
+        table.add_column(L["orb"], justify="right", min_width=8)
+
+        for asp in aspects[:15]:
+            spec = ASPECTS[asp.key]
+            name = spec[lang if lang in ("pt", "en") else "pt"]["nome"]
+            hcolor = _HARMONY_COLOR[asp.harmony]
+            table.add_row(
+                f"[{hcolor}]{asp.symbol} {name}[/]  {asp.label(chart_a, chart_b, lang)}",
+                f"[{hcolor}]{L[_HARMONY_LABEL[asp.harmony]]}[/]",
+                f"[dim]{asp.orb:.1f}°[/]",
+            )
+        console.print(table)
+
+        # ── Narratives for the 3 most exact cross-aspects ───────────────────
+        for asp in aspects[:3]:
+            spec = ASPECTS[asp.key]
+            texts = spec[lang if lang in ("pt", "en") else "pt"]
+            hcolor = _HARMONY_COLOR[asp.harmony]
+            console.print(
+                Panel(
+                    f"[white]{syn.cross_narrative(asp, chart_a, chart_b, lang)}[/]",
+                    title=f"[bold {hcolor}]{asp.symbol} {texts['nome']} — "
+                          f"{asp.label(chart_a, chart_b, lang)}[/]",
+                    border_style=hcolor,
+                    expand=True,
+                )
+            )

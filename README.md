@@ -32,6 +32,9 @@ enviada para lugar nenhum.
   branco e ele tenta detectar sua localização pelo IP (sempre pedindo permissão, s/n)
 - 📡 **Modo offline**: forneça `--lat`, `--lon` e `--tz` e rode sem internet
 - 🌐 **PT-BR e EN** com alternância direto no menu
+- 💞 **Sinastria**: compare dois mapas — aspectos cruzados entre os planetas,
+  características em comum, química por elementos dos pares-chave (Sol×Sol,
+  Lua×Lua, Vênus×Marte…) e um veredito da conexão
 - 🍎 **App para Mac**: gera um `Cyber Astra.app` que abre numa janela de Terminal
   amigável (fonte grande, fundo creme, título bonito) — perfeito para quem não usa terminal
 
@@ -79,9 +82,10 @@ Sem argumentos, abre o **menu interativo**:
 
 ```
 1  🌟  Criar meu mapa astral
-2  🌐  Idioma / Language
-3  ❓  O que é isso? Como funciona?
-4  🚪  Sair
+2  💞  Comparar dois mapas (sinastria)
+3  🌐  Idioma / Language
+4  ❓  O que é isso? Como funciona?
+5  🚪  Sair
 ```
 
 Digite o número da opção e aperte Enter. É só isso. 💜

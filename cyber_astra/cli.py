@@ -28,6 +28,7 @@ SECTIONS = ("planets", "synthesis", "aspects", "insights", "houses", "wheel")
 MENU = {
     "pt": {
         "option_chart": "🌟  Criar meu mapa astral",
+        "option_synastry": "💞  Comparar dois mapas (sinastria)",
         "option_lang": "🌐  Idioma / Language",
         "option_help": "❓  O que é isso? Como funciona?",
         "option_exit": "🚪  Sair",
@@ -59,6 +60,7 @@ MENU = {
     },
     "en": {
         "option_chart": "🌟  Create my birth chart",
+        "option_synastry": "💞  Compare two charts (synastry)",
         "option_lang": "🌐  Language / Idioma",
         "option_help": "❓  What is this? How does it work?",
         "option_exit": "🚪  Quit",
@@ -122,9 +124,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 # ── Coleta de dados ──────────────────────────────────────────────────────────
 
-def _collect_menu_inputs(L: dict) -> dict:
+def _collect_menu_inputs(L: dict, prefix: str = "") -> dict:
     """Friendly questionnaire for the menu flow."""
-    name = Prompt.ask(f"[bold]😊 {L['name']}[/]", console=console)
+    who = f"[bright_magenta]{prefix}[/] " if prefix else ""
+    name = Prompt.ask(f"{who}[bold]😊 {L['name']}[/]", console=console)
     year, month, day = prompts.ask_date(console)
     hour, minute = prompts.ask_time(console)
     location_label, geo = prompts.ask_location(console)
@@ -188,15 +191,11 @@ def _resolve_geo(data: dict, L: dict) -> dict | None:
 
 # ── Relatório ────────────────────────────────────────────────────────────────
 
-def run_report(data: dict, lang: str, only: str | None = None,
-               no_wheel: bool = False, animate: bool = False) -> bool:
-    """Compute and display the chart. Returns False on failure."""
-    L = MENU[lang]
-
+def compute_chart(data: dict, L: dict):
+    """Resolve geo + calculate the chart. Returns (chart, geo) or None."""
     geo = _resolve_geo(data, L)
     if geo is None:
-        return False
-
+        return None
     with animations.stargazing(console, L["calculating"]):
         try:
             chart = calculate(
@@ -208,7 +207,19 @@ def run_report(data: dict, lang: str, only: str | None = None,
             )
         except Exception as e:
             console.print(f"[red]{L['calc_error']}:[/] {e}")
-            return False
+            return None
+    return chart, geo
+
+
+def run_report(data: dict, lang: str, only: str | None = None,
+               no_wheel: bool = False, animate: bool = False) -> bool:
+    """Compute and display the chart. Returns False on failure."""
+    L = MENU[lang]
+
+    result = compute_chart(data, L)
+    if result is None:
+        return False
+    chart, geo = result
 
     birth_str = (f"{data['day']:02d}/{data['month']:02d}/{data['year']}"
                  f"  {data['hour']:02d}:{data['minute']:02d}"
@@ -252,11 +263,36 @@ def _show_menu(lang: str) -> None:
     table.add_column(style="bold cyan", justify="right", width=4)
     table.add_column()
     table.add_row("1", L["option_chart"])
-    table.add_row("2", f"{L['option_lang']}  [dim]({L['current_lang']})[/]")
-    table.add_row("3", L["option_help"])
-    table.add_row("4", L["option_exit"])
+    table.add_row("2", L["option_synastry"])
+    table.add_row("3", f"{L['option_lang']}  [dim]({L['current_lang']})[/]")
+    table.add_row("4", L["option_help"])
+    table.add_row("5", L["option_exit"])
     console.print(Panel(table, border_style="bright_magenta",
                         padding=(1, 4), expand=False))
+
+
+def run_synastry(lang: str) -> bool:
+    """Collect two people, compute both charts, show the synastry report."""
+    L = MENU[lang]
+    p1 = "Pessoa 1 —" if lang == "pt" else "Person 1 —"
+    p2 = "Pessoa 2 —" if lang == "pt" else "Person 2 —"
+
+    console.print(f"\n[bold bright_magenta]{L['option_synastry']}[/]\n")
+    data_a = _collect_menu_inputs(L, prefix=p1)
+    console.print()
+    data_b = _collect_menu_inputs(L, prefix=p2)
+
+    result_a = compute_chart(data_a, L)
+    result_b = compute_chart(data_b, L)
+    if result_a is None or result_b is None:
+        return False
+
+    display.show_synastry(result_a[0], result_b[0], lang)
+    console.print()
+    console.rule("[dim]✨ Fim da sinastria ✨[/]" if lang == "pt"
+                 else "[dim]✨ End of synastry ✨[/]")
+    console.print()
+    return True
 
 
 def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
@@ -265,7 +301,7 @@ def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
         L = MENU[lang]
         _show_menu(lang)
         choice = Prompt.ask(f"[bold bright_magenta]{L['choose']}[/]",
-                            choices=["1", "2", "3", "4"], default="1",
+                            choices=["1", "2", "3", "4", "5"], default="1",
                             console=console, show_choices=False)
         if choice == "1":
             data = _collect_menu_inputs(L)
@@ -275,8 +311,13 @@ def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
                        default="", show_default=False, console=console)
             console.print()
         elif choice == "2":
-            lang = "en" if lang == "pt" else "pt"
+            run_synastry(lang)
+            Prompt.ask(f"\n[bold magenta]{L['back']}[/]",
+                       default="", show_default=False, console=console)
+            console.print()
         elif choice == "3":
+            lang = "en" if lang == "pt" else "pt"
+        elif choice == "4":
             console.print(Panel(L["help_body"], border_style="cyan",
                                 padding=(1, 4), expand=False))
             console.print()
