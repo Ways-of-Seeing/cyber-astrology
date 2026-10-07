@@ -4,7 +4,11 @@ Draws an elliptical wheel (corrected for terminal char aspect ratio)
 with zodiac ring, house divisions, and planetary positions.
 """
 
+from __future__ import annotations
+
 import math
+
+from .engine import Chart
 
 # Character aspect ratio correction: terminal chars are ~2.2× taller than wide.
 # Using ry = rx * ASPECT makes the ellipse appear circular on screen.
@@ -60,12 +64,12 @@ def _line_points(x1: int, y1: int, x2: int, y2: int) -> list[tuple[int, int]]:
     return list(pts)
 
 
-def render(chart_data: dict, width: int = 79, height: int = 41) -> str:
+def render(chart: "Chart", width: int = 79, height: int = 41) -> str:
     grid = [[" "] * width for _ in range(height)]
     cx = width // 2
     cy = height // 2
 
-    asc_lon = chart_data["ascendant"]["longitude"]
+    asc_lon = chart.ascendant.longitude
 
     def put(x, y, ch):
         if 0 <= x < width and 0 <= y < height:
@@ -98,7 +102,7 @@ def render(chart_data: dict, width: int = 79, height: int = 41) -> str:
         put(x, y, "·")
 
     # ── House cusp lines & numbers ──────────────────────────────────────────
-    house_cusps = chart_data["house_cusps"]
+    house_cusps = chart.house_cusps
     for i, cusp_lon in enumerate(house_cusps):
         # Line from inner circle to zodiac ring
         ix, iy = _to_xy(cusp_lon, 0.6, cx, cy, asc_lon)
@@ -130,20 +134,20 @@ def render(chart_data: dict, width: int = 79, height: int = 41) -> str:
                 return nx2, ny2
         return base_x, base_y
 
-    for attr, pdata in sorted(chart_data["planets"].items(),
-                               key=lambda kv: kv[1]["longitude"]):
-        lon = pdata["longitude"]
+    for attr, pdata in sorted(chart.planets.items(),
+                               key=lambda kv: kv[1].longitude):
+        lon = pdata.longitude
         px, py = _to_xy(lon, 0.42, cx, cy, asc_lon)
         px, py = find_free(px, py)
         placed.append((px, py))
-        put(px, py, pdata["symbol"])
+        put(px, py, pdata.symbol)
 
     # ── AC / DC / MC / IC markers ────────────────────────────────────────────
     for label, lon, r in [
         ("AC", asc_lon, 0.52),
         ("DC", (asc_lon + 180) % 360, 0.52),
-        ("MC", chart_data["mc"]["longitude"], 0.52),
-        ("IC", (chart_data["mc"]["longitude"] + 180) % 360, 0.52),
+        ("MC", chart.mc.longitude, 0.52),
+        ("IC", (chart.mc.longitude + 180) % 360, 0.52),
     ]:
         lx, ly = _to_xy(lon, r, cx, cy, asc_lon)
         for j, ch in enumerate(label):

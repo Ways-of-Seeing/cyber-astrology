@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+*.egg-info/
+dist/
+build/
+Cyber Astra.app/

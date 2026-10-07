@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cyber-astra"
+version = "2.0.0"
+description = "Mapa astral na linha de comando — leituras ricas, insights e roda natal em ASCII"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Lucas Rafaldini" }]
+dependencies = [
+    "kerykeion>=6.0.0",
+    "geopy>=2.4.0",
+    "timezonefinder>=6.5.0",
+    "rich>=13.7.0",
+]
+
+[project.scripts]
+cyber-astra = "cyber_astra.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cyber_astra"]
