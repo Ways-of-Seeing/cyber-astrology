@@ -18,7 +18,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 
-from . import animations, display, geocoder, prompts, wheel
+from . import animations, art, display, geocoder, prompts, wheel
 from .engine import calculate
 
 console = Console()
@@ -296,7 +296,7 @@ def run_synastry(lang: str) -> bool:
 
 
 def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
-    animations.twinkle_banner(console)
+    animations.twinkle_banner(console, lang=lang)
     while True:
         L = MENU[lang]
         _show_menu(lang)
@@ -304,6 +304,7 @@ def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
                             choices=["1", "2", "3", "4", "5"], default="1",
                             console=console, show_choices=False)
         if choice == "1":
+            console.print(art.render(art.section("chart")))
             data = _collect_menu_inputs(L)
             console.print()
             run_report(data, lang, animate=True)
@@ -311,6 +312,7 @@ def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
                        default="", show_default=False, console=console)
             console.print()
         elif choice == "2":
+            console.print(art.render(art.section("synastry")))
             run_synastry(lang)
             Prompt.ask(f"\n[bold magenta]{L['back']}[/]",
                        default="", show_default=False, console=console)
@@ -318,10 +320,12 @@ def run_menu(lang: str = "pt", app_mode: bool = False) -> None:
         elif choice == "3":
             lang = "en" if lang == "pt" else "pt"
         elif choice == "4":
+            console.print(art.render(art.section("help"), style="cyan"))
             console.print(Panel(L["help_body"], border_style="cyan",
                                 padding=(1, 4), expand=False))
             console.print()
         else:
+            console.print(art.render(art.section("exit")))
             console.print(f"\n[bold bright_magenta]{L['bye']}[/]\n")
             if app_mode:
                 Prompt.ask(f"[bold magenta]{MENU[lang]['close']}[/]",

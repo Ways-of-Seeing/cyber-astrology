@@ -26,6 +26,8 @@ enviada para lugar nenhum.
 ## 🌟 O que ele faz
 
 - 🎨 **Banner animado de céu estrelado** e spinners simpáticos enquanto "consulta as estrelas"
+- 🖼️ **Artes ASCII que mudam a cada execução** — splash de abertura, artes por
+  funcionalidade do menu e por seção do relatório, sorteadas a cada vez
 - 📅 **Entrada de dados flexível**: datas como `15061990` ou `15/06/1990`; horários como
   `1430`, `14:30` ou `14h30`; horário em branco = meio-dia
 - 🌍 **Localização inteligente**: digite a cidade e ele acha no mapa; ou deixe em

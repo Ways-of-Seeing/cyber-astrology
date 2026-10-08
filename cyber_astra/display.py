@@ -8,6 +8,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from . import art
 from . import synthesis
 from . import synastry as syn
 from .data import ASPECTS, ELEMENTS, MODALITIES, get_house, get_planet_sign
@@ -117,6 +118,13 @@ _HARMONY_LABEL = {"soft": "harmonious", "hard": "challenging", "fusion": "fusing
 _HARMONY_COLOR = {"soft": "green", "hard": "red", "fusion": "yellow"}
 
 
+def _section_art(key: str) -> None:
+    """Print a random compact art above a report section."""
+    lines = art.section(key)
+    if lines:
+        console.print(art.render(lines, style="dim magenta"))
+
+
 def show_header(name: str, birth_str: str, lang: str = "pt"):
     L = LABELS[lang]
     console.print()
@@ -147,6 +155,7 @@ def show_location(geo: dict, lang: str = "pt"):
 
 
 def show_wheel(wheel_str: str):
+    _section_art("wheel")
     console.print()
     console.print(Panel(wheel_str, title="[bold cyan]Roda Natal[/]",
                         border_style="cyan", expand=True))
@@ -154,6 +163,7 @@ def show_wheel(wheel_str: str):
 
 def show_planet_table(chart: Chart, lang: str = "pt"):
     L = LABELS[lang]
+    _section_art("planets")
     console.print()
     table = Table(
         title=L["planets_title"],
@@ -196,6 +206,7 @@ def show_planet_table(chart: Chart, lang: str = "pt"):
 def show_synthesis(chart: Chart, lang: str = "pt"):
     """Big Three + element/modality balance + natal Moon phase."""
     L = LABELS[lang]
+    _section_art("synthesis")
     console.print()
     console.rule(f"[bold cyan]{L['synthesis_title']}[/]")
 
@@ -260,6 +271,7 @@ def show_synthesis(chart: Chart, lang: str = "pt"):
 def show_aspects(chart: Chart, lang: str = "pt"):
     """Aspect table + narrative panels for the tightest aspects."""
     L = LABELS[lang]
+    _section_art("aspects")
     console.print()
     console.rule(f"[bold cyan]{L['aspects_title']}[/]")
 
@@ -345,6 +357,7 @@ def _render_insight(entry: dict, lang: str, color: str):
 
 def show_insights(chart: Chart, lang: str = "pt"):
     L = LABELS[lang]
+    _section_art("synthesis")
     console.print()
     console.rule(f"[bold cyan]{L['insights_title']}[/]")
 
@@ -371,6 +384,7 @@ def show_insights(chart: Chart, lang: str = "pt"):
 
 def show_house_meanings(chart: Chart, lang: str = "pt"):
     L = LABELS[lang]
+    _section_art("houses")
     console.print()
     console.rule(f"[bold cyan]{L['house_meaning']}[/]")
 
@@ -407,6 +421,7 @@ def show_house_meanings(chart: Chart, lang: str = "pt"):
 def show_synastry(chart_a: Chart, chart_b: Chart, lang: str = "pt"):
     """Full synastry report: verdict, shared traits, chemistry, cross aspects."""
     L = LABELS[lang]
+    _section_art("synastry")
     console.print()
     console.rule(f"[bold magenta]{L['synastry_title']}[/]")
 

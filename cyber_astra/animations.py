@@ -11,28 +11,39 @@ from rich.console import Console
 from rich.live import Live
 from rich.text import Text
 
+from . import art
+
 _STARS = ["✦", "✧", "⋆", "*", "·", ".", "+"]
 _COLORS = ["bright_white", "yellow", "cyan", "magenta", "white", "bright_blue"]
 
-_BANNER = [
-    "   ✨  C Y B E R   A S T R A  ✨   ",
-    "  🌙  seu mapa astral em poucos  ⭐ ",
-    "         passos, sem mistério       ",
-]
+_TAGLINE = {
+    "pt": "seu mapa astral em poucos passos",
+    "en": "your birth chart in a few steps",
+}
 
 
-def _starfield_frame(width: int, height: int, tick: int) -> Text:
+def _banner_lines(lang: str = "pt") -> list[str]:
+    """Random splash art + wordmark + tagline. Varies every run."""
+    return art.splash() + [
+        "",
+        "   ✨  C Y B E R   A S T R A  ✨",
+        f"      🌙  {_TAGLINE.get(lang, _TAGLINE['pt'])}  ⭐",
+    ]
+
+
+def _starfield_frame(width: int, height: int, tick: int,
+                     banner: list[str]) -> Text:
     """One frame of a twinkling starfield with the banner in the middle."""
     rng = random.Random(tick * 7919)  # deterministic-ish per tick
     text = Text()
-    banner_start = (height - len(_BANNER)) // 2
+    banner_start = max(0, (height - len(banner)) // 2)
 
     for row in range(height):
         for col in range(width):
             bi = row - banner_start
-            if 0 <= bi < len(_BANNER):
-                line = _BANNER[bi]
-                pad = (width - len(line)) // 2
+            if 0 <= bi < len(banner):
+                line = banner[bi]
+                pad = max(0, (width - len(line)) // 2)
                 if col == pad:
                     text.append(line, style="bold bright_magenta")
                     col += len(line) - 1  # skip banner chars
@@ -51,16 +62,18 @@ def _starfield_frame(width: int, height: int, tick: int) -> Text:
 
 
 def twinkle_banner(console: Console, seconds: float = 1.8,
-                   width: int = 68, height: int = 11) -> None:
-    """Animated starfield banner. Skipped silently when not a TTY."""
+                   width: int = 68, height: int = 17,
+                   lang: str = "pt") -> None:
+    """Animated starfield banner with random art. Degrades when not a TTY."""
+    banner = _banner_lines(lang)
     if not console.is_terminal:
-        console.print("[bold magenta]" + "\n".join(_BANNER) + "[/]")
+        console.print("[bold magenta]" + "\n".join(banner) + "[/]")
         return
     frames = int(seconds * 12)
     with Live(console=console, refresh_per_second=12,
               transient=True) as live:
         for tick in range(frames):
-            live.update(_starfield_frame(width, height, tick))
+            live.update(_starfield_frame(width, height, tick, banner))
             time.sleep(1 / 12)
 
 
